@@ -1,0 +1,43 @@
+apply from: 'gradle/release.gradle'
+
+group 'com.movile'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'application'
+
+mainClassName = "com.movile.pgle.Coordinator"
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven {
+        url "http://nexus.it.movile.com:8081/nexus/content/repositories/releases/"
+    }
+
+    maven {
+        url "https://repository.jboss.org/nexus/content/repositories/releases/"
+    }
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.12'
+    compile 'ch.qos.logback:logback-classic:1.1.3'
+    compile 'ch.qos.logback:logback-core:1.1.3'
+    compile "org.springframework:spring-core:4.0.3.RELEASE"
+    compile "org.springframework:spring-beans:4.0.3.RELEASE"
+    compile "org.springframework:spring-context:4.0.3.RELEASE"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.5.+"
+    compile "com.movile.movile-resources:movile-res-commons:1.0.39"
+
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile "org.springframework:spring-test:4.0.3.RELEASE"
+}
+

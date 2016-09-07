@@ -1,0 +1,26 @@
+[
+  {
+    "id":1,
+    "name":"CLARO",
+    "electionInterval":5000,
+    "leadershipInterval":60000
+  },
+  {
+    "id":2,
+    "name":"VIVO",
+    "electionInterval":5000,
+    "leadershipInterval":60000
+  },
+  {
+    "id":3,
+    "name":"OI",
+    "electionInterval":5000,
+    "leadershipInterval":60000
+  },
+  {
+    "id":4,
+    "name":"TIM",
+    "electionInterval":5000,
+    "leadershipInterval":60000
+  }
+]

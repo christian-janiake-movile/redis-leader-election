@@ -1,0 +1,16 @@
+buildscript {
+    repositories {
+        maven { url "http://nexus.it.movile.com:8081/nexus/content/repositories/central/" }
+    }
+    dependencies {
+        classpath 'com.github.townsfolk:gradle-release:1.2'
+    }
+}
+// Check to make sure release.ReleasePlugin isn't already added.
+if (!project.plugins.findPlugin(release.ReleasePlugin)) {
+    project.apply(plugin: release.ReleasePlugin)
+}
+
+release {
+    requireBranch = 'develop'
+}
