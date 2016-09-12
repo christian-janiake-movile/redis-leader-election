@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
@@ -24,6 +25,9 @@ public class PeerGroup {
 
     private Boolean isLeader = Boolean.FALSE;
     private Date isLeaderUntil;
+
+    @Autowired
+    private ApplicationContext ctx;
 
     @Autowired
     ThreadPoolTaskScheduler scheduler;
@@ -48,7 +52,7 @@ public class PeerGroup {
                 if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
                     log.info("{} already leader, no election (heartbeat maybe?)", name);
                 } else {
-                    LeaderElection election = new LeaderElection(redis, id, leadershipInterval);
+                    LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", peerGroup);
                     if (election.isLeader()) {
                         log.info("{} Leadership acquired", name);
                         isLeader = Boolean.TRUE;
@@ -69,7 +73,7 @@ public class PeerGroup {
     @PreDestroy
     public void unregister() {
         if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
-            LeaderElection election = new LeaderElection(redis, id, leadershipInterval);
+            LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", this);
             election.unregisterLeadership();
         }
     }
