@@ -26,11 +26,7 @@ public class WorkerEventListener extends EventListener {
     @Override
     void isLeader(PeerGroup peerGroup) {
         if(workers.containsKey(peerGroup.getId())) {
-            try {
-                workers.get(peerGroup.getId()).work();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            workers.get(peerGroup.getId()).startWorking();
         }
     }
 

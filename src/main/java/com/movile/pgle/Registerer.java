@@ -44,6 +44,7 @@ public class Registerer {
         public Long electionInterval;
         public Long leadershipInterval;
         public String workerClass;
+        public String leaderElectionBean;
 
         @Override
         public String toString() {
@@ -53,6 +54,7 @@ public class Registerer {
                     ", electionInterval=" + electionInterval +
                     ", leadershipInterval=" + leadershipInterval +
                     ", workerClass=" + workerClass +
+                    ", leaderElectionBean=" + leaderElectionBean +
                     '}';
         }
     }
@@ -76,8 +78,8 @@ public class Registerer {
                 Long electionInterval = Long.parseLong(groupProperties.getProperty("group.electionInterval"));
                 Long leadershipInterval = Long.parseLong(groupProperties.getProperty("group.leadershipInterval"));
                 String workerClass = groupProperties.getProperty("group.workerClass", null);
-
-                PeerGroup peerGroup = (PeerGroup) ctx.getBean("peerGroup", id, name, electionInterval, leadershipInterval, workerClass);
+                String leaderElectionBean = groupProperties.getProperty("group.leaderElectionBean", null);
+                PeerGroup peerGroup = (PeerGroup) ctx.getBean("peerGroup", id, name, electionInterval, leadershipInterval, workerClass, leaderElectionBean);
             }
 
             ObjectMapper mapper = new ObjectMapper();

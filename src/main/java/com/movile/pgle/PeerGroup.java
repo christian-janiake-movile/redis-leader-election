@@ -1,10 +1,10 @@
 package com.movile.pgle;
 
-import com.movile.res.redis.RedisConnectionManager;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
@@ -21,15 +21,16 @@ public class PeerGroup {
     private Long electionInterval;
     private Long leadershipInterval;
     private String workerClass;        // optional: Class implementing Worker interface
+    private String leaderElectionBean; // optional: Bean name for leader election model
 
     private Boolean isLeader = Boolean.FALSE;
     private Date isLeaderUntil;
 
     @Autowired
-    ThreadPoolTaskScheduler scheduler;
+    private ApplicationContext ctx;
 
     @Autowired
-    RedisConnectionManager redis;
+    ThreadPoolTaskScheduler scheduler;
 
     @Autowired
     Logger log;
@@ -41,14 +42,17 @@ public class PeerGroup {
     public void schedule() {
         final PeerGroup peerGroup = this;
         peerGroupEventPublisher.publishEvent(new Event(Event.EventType.PEER_GROUP_REGISTER, peerGroup));
-        long nextElection = electionInterval - (System.currentTimeMillis() % electionInterval);
+
+        long now = System.currentTimeMillis();
+        long nextElection = now + electionInterval - (now % electionInterval);
         scheduler.scheduleAtFixedRate(new Thread() {
             @Override
             public void run() {
                 if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
                     log.info("{} already leader, no election (heartbeat maybe?)", name);
                 } else {
-                    LeaderElection election = new LeaderElection(redis, id, leadershipInterval);
+                    String bean = leaderElectionBean != null ? leaderElectionBean : "singleClusterLeaderElection";
+                    LeaderElection election = (LeaderElection) ctx.getBean(bean , id, leadershipInterval);
                     if (election.isLeader()) {
                         log.info("{} Leadership acquired", name);
                         isLeader = Boolean.TRUE;
@@ -69,17 +73,18 @@ public class PeerGroup {
     @PreDestroy
     public void unregister() {
         if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
-            LeaderElection election = new LeaderElection(redis, id, leadershipInterval);
+            LeaderElection election = new LeaderElection(id, leadershipInterval);
             election.unregisterLeadership();
         }
     }
 
-    public PeerGroup(Integer id, String name, Long electionInterval, Long leadershipInterval, String workerClass) {
+    public PeerGroup(Integer id, String name, Long electionInterval, Long leadershipInterval, String workerClass, String leaderElectionBean) {
         this.id = id;
         this.name = name;
         this.electionInterval = electionInterval;
         this.leadershipInterval = leadershipInterval;
         this.workerClass = workerClass;
+        this.leaderElectionBean = leaderElectionBean;
     }
 
     public Integer getId() {
