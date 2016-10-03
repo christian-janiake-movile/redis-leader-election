@@ -18,7 +18,7 @@ public class WorkerEventListener extends EventListener {
                 new Thread((Runnable) workerInstance).start();
                 workers.put(peerGroup.getId(), workerInstance);
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
         }
     }

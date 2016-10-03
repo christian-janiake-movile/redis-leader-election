@@ -1,6 +1,7 @@
 package com.movile.pgle;
 
 import com.movile.res.redis.RedisConnectionManager;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -34,6 +35,9 @@ public class LeaderElection {
     private PeerGroup peerGroup;
 
     @Autowired
+    Logger log;
+
+    @Autowired
     public LeaderElection(PeerGroup peerGroup) {
         this.start = new Date();
         this.peerGroup = peerGroup;
@@ -43,12 +47,14 @@ public class LeaderElection {
     private void initialize() {
         this.redis = redis;
         this.peerGroupId = peerGroup.getId();
-        this.ttl = peerGroup.getElectionInterval();
+        this.ttl = peerGroup.getLeadershipInterval();
     }
 
     public boolean isLeader() {
         String key = keyPrefix + this.peerGroupId.toString();
         String result = redis.setnx(key, hostname, ttl);
+
+        log.info("[LEADER ELECTION] Trying to write value {} in key {} with ttl {}, result: {}", hostname, key, ttl, result);
 
         return "OK".equals(result);
     }
