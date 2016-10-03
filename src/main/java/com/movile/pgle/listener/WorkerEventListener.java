@@ -11,7 +11,7 @@ public class WorkerEventListener extends EventListener {
     private Map<Integer, Worker> workers = new HashMap<>();
 
     @Override
-    void peerGroupRegister(PeerGroup peerGroup) {
+    public void peerGroupRegister(PeerGroup peerGroup) {
         if(peerGroup.hasWorker()) {
             try {
                 Worker workerInstance = (Worker) Class.forName(peerGroup.getWorkerClass()).getConstructor(PeerGroup.class).newInstance(peerGroup);
@@ -24,7 +24,7 @@ public class WorkerEventListener extends EventListener {
     }
 
     @Override
-    void isLeader(PeerGroup peerGroup) {
+    public void isLeader(PeerGroup peerGroup) {
         if(workers.containsKey(peerGroup.getId())) {
             try {
                 workers.get(peerGroup.getId()).work();
@@ -35,7 +35,7 @@ public class WorkerEventListener extends EventListener {
     }
 
     @Override
-    void isNotLeader(PeerGroup peerGroup) {
+    public void isNotLeader(PeerGroup peerGroup) {
         if(workers.containsKey(peerGroup.getId())) {
             workers.get(peerGroup.getId()).stop();
         }

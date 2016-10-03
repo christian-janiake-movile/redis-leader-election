@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
 public class SampleWorker implements Worker, Runnable {
 
     private PeerGroup peerGroup;
-    private boolean alive = false;
+    private boolean onDuty = false;
 
     public SampleWorker(PeerGroup peerGroup) {
         this.peerGroup = peerGroup;
@@ -15,18 +15,18 @@ public class SampleWorker implements Worker, Runnable {
 
     @Override
     public void work() throws InterruptedException {
-        alive = true;
+        onDuty = true;
     }
 
     @Override
     public void stop() {
-        alive = false;
+        onDuty = false;
     }
 
     @Override
     public void run() {
         while(true) {
-            if(alive) {
+            if(onDuty) {
                 System.out.println(peerGroup.getName() + " is working");
             }
             try {

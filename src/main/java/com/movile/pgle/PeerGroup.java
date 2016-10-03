@@ -13,11 +13,13 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.Date;
+import java.util.Properties;
 
 @Component("peerGroup")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class PeerGroup {
     private Integer id;
+    private Properties properties;
     private String name;
     private Long electionInterval;
     private Long leadershipInterval;
@@ -78,12 +80,13 @@ public class PeerGroup {
         }
     }
 
-    public PeerGroup(Integer id, String name, Long electionInterval, Long leadershipInterval, String workerClass) {
+    public PeerGroup(Integer id, Properties groupProperties) {
         this.id = id;
-        this.name = name;
-        this.electionInterval = electionInterval;
-        this.leadershipInterval = leadershipInterval;
-        this.workerClass = workerClass;
+        this.name = groupProperties.getProperty("group.name");
+        this.electionInterval = Long.parseLong(groupProperties.getProperty("group.electionInterval"));
+        this.leadershipInterval = Long.parseLong(groupProperties.getProperty("group.leadershipInterval"));
+        this.workerClass = groupProperties.getProperty("group.workerClass", null);
+        this.properties = groupProperties;
     }
 
     public Integer getId() {
@@ -92,6 +95,10 @@ public class PeerGroup {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public Properties getProperties() {
+        return properties;
     }
 
     public String getName() {

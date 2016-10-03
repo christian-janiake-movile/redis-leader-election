@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 @Component
@@ -38,25 +39,6 @@ public class Registerer {
         }
     };
 
-    static class PeerGroupDefinition {
-        public Integer id;
-        public String name;
-        public Long electionInterval;
-        public Long leadershipInterval;
-        public String workerClass;
-
-        @Override
-        public String toString() {
-            return "PeerGroupDefinition{" +
-                    "id=" + id +
-                    ", name='" + name + '\'' +
-                    ", electionInterval=" + electionInterval +
-                    ", leadershipInterval=" + leadershipInterval +
-                    ", workerClass=" + workerClass +
-                    '}';
-        }
-    }
-
     public void initialize() {
         try {
             String groupConfigFilesPath = ctx.getEnvironment().getProperty("leader.election.config.path", ".");
@@ -71,13 +53,7 @@ public class Registerer {
                 groupProperties.load(new FileReader(propertiesFile));
                 log.info(groupProperties.toString());
 
-                String name = groupProperties.getProperty("group.name");
-                Integer id = currentId++;
-                Long electionInterval = Long.parseLong(groupProperties.getProperty("group.electionInterval"));
-                Long leadershipInterval = Long.parseLong(groupProperties.getProperty("group.leadershipInterval"));
-                String workerClass = groupProperties.getProperty("group.workerClass", null);
-
-                PeerGroup peerGroup = (PeerGroup) ctx.getBean("peerGroup", id, name, electionInterval, leadershipInterval, workerClass);
+                registerPeerGroup(currentId++, groupProperties);
             }
 
             ObjectMapper mapper = new ObjectMapper();
@@ -87,12 +63,15 @@ public class Registerer {
             for(File jsonFile:jsonFiles) {
                 log.info("Loading " + jsonFile.getPath());
 
-                List<PeerGroupDefinition> data = mapper.readValue(jsonFile, new TypeReference<List<PeerGroupDefinition>>(){});
+                List<Map<String, String>> data = mapper.readValue(jsonFile, new TypeReference<List<Map<String, String>>>(){});
 
-                for(PeerGroupDefinition def:data) {
+                for(Map<String, String> groupDef:data) {
 
-                    log.info(def.toString());
-                    PeerGroup peerGroup = (PeerGroup) ctx.getBean("peerGroup", currentId++, def.name, def.electionInterval, def.leadershipInterval, def.workerClass);
+                    Properties groupProperties = new Properties();
+                    groupProperties.putAll(groupDef);
+                    log.info(groupProperties.toString());
+
+                    registerPeerGroup(currentId++, groupProperties);
                 }
             }
 
@@ -101,6 +80,10 @@ public class Registerer {
         }
 
 
+    }
+
+    private void registerPeerGroup(int id, Properties groupProperties) {
+        PeerGroup peerGroup = (PeerGroup) ctx.getBean("peerGroup", id, groupProperties);
     }
 
 }

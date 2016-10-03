@@ -31,7 +31,7 @@ public abstract class EventListener implements ApplicationListener<Event> {
         }
     }
 
-    abstract void peerGroupRegister(PeerGroup peerGroup);
-    abstract void isLeader(PeerGroup peerGroup);
-    abstract void isNotLeader(PeerGroup peerGroup);
+    public abstract void peerGroupRegister(PeerGroup peerGroup);
+    public abstract void isLeader(PeerGroup peerGroup);
+    public abstract void isNotLeader(PeerGroup peerGroup);
 }
