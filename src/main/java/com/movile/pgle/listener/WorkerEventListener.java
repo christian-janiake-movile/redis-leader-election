@@ -1,6 +1,8 @@
 package com.movile.pgle.listener;
 
 import com.movile.pgle.PeerGroup;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -10,11 +12,19 @@ import java.util.Map;
 public class WorkerEventListener extends EventListener {
     private Map<Integer, Worker> workers = new HashMap<>();
 
+    @Autowired
+    private ApplicationContext ctx;
+
     @Override
     public void peerGroupRegister(PeerGroup peerGroup) {
         if(peerGroup.hasWorker()) {
             try {
-                Worker workerInstance = (Worker) Class.forName(peerGroup.getWorkerClass()).getConstructor(PeerGroup.class).newInstance(peerGroup);
+//                Class workerClass = Class.forName(peerGroup.getWorkerClass());
+                Worker workerInstance = (Worker) ctx.getBean(peerGroup.getWorkerClass(), peerGroup);
+//                if(workerInstance == null) {
+//                    log.info("No bean found on context for worker class {}", peerGroup.getWorkerClass());
+//                    workerInstance = (Worker) workerClass.getConstructor(PeerGroup.class).newInstance(peerGroup);
+//                }
                 new Thread((Runnable) workerInstance).start();
                 workers.put(peerGroup.getId(), workerInstance);
             } catch (Exception e) {

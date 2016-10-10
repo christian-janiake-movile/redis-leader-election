@@ -35,7 +35,7 @@ dependencies {
     compile "org.springframework:spring-beans:4.0.3.RELEASE"
     compile "org.springframework:spring-context:4.0.3.RELEASE"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.+"
-    compile "com.movile.movile-resources:movile-res-commons:1.0.39"
+    compile "com.movile.movile-resources:movile-res-commons:1.0.40-SNAPSHOT"
 
     testCompile group: 'junit', name: 'junit', version: '4.11'
     testCompile "org.springframework:spring-test:4.0.3.RELEASE"

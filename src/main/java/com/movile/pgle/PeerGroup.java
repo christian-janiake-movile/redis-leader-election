@@ -43,20 +43,29 @@ public class PeerGroup {
     @Autowired
     PeerGroupEventPublisher peerGroupEventPublisher;
 
+    public PeerGroup(Integer id, Properties groupProperties) {
+        this.id = id;
+        this.name = groupProperties.getProperty("group.name");
+        this.electionInterval = Long.parseLong(groupProperties.getProperty("group.electionInterval"));
+        this.leadershipInterval = Long.parseLong(groupProperties.getProperty("group.leadershipInterval"));
+        this.workerClass = groupProperties.getProperty("group.workerClass", null);
+        this.properties = groupProperties;
+    }
+
     @PostConstruct
     public void schedule() {
         final PeerGroup peerGroup = this;
+        final LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", peerGroup);
         peerGroupEventPublisher.publishEvent(new Event(Event.EventType.PEER_GROUP_REGISTER, peerGroup));
         long nextElection = electionInterval - (System.currentTimeMillis() % electionInterval);
         scheduler.scheduleAtFixedRate(new Thread() {
             @Override
             public void run() {
                 if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
-                    log.info("{} already leader, no election (heartbeat maybe?)", name);
+                    log.info("{} is leader", name);
                 } else {
-                    LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", peerGroup);
                     if (election.isLeader()) {
-                        log.info("{} Leadership acquired", name);
+                        log.info("{} leadership acquired", name);
                         isLeader = Boolean.TRUE;
                         isLeaderUntil = new Date(System.currentTimeMillis() + leadershipInterval);
                         peerGroupEventPublisher.publishEvent(new Event(Event.EventType.IS_LEADER, peerGroup));
@@ -78,15 +87,6 @@ public class PeerGroup {
             LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", this);
             election.unregisterLeadership();
         }
-    }
-
-    public PeerGroup(Integer id, Properties groupProperties) {
-        this.id = id;
-        this.name = groupProperties.getProperty("group.name");
-        this.electionInterval = Long.parseLong(groupProperties.getProperty("group.electionInterval"));
-        this.leadershipInterval = Long.parseLong(groupProperties.getProperty("group.leadershipInterval"));
-        this.workerClass = groupProperties.getProperty("group.workerClass", null);
-        this.properties = groupProperties;
     }
 
     public Integer getId() {

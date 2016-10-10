@@ -23,7 +23,7 @@ public class LeaderElection {
     @Value("#{systemProperties['redis.leader.election.key.prefix'] ?: 'leader.election.group'}")
     private String keyPrefix;
 
-    @Value("#{systemProperties['HOSTNAME']}")
+    @Value("#{hostname}")
     String hostname;
 
     @Autowired
@@ -51,8 +51,8 @@ public class LeaderElection {
     }
 
     public boolean isLeader() {
-        String key = keyPrefix + this.peerGroupId.toString();
-        String result = redis.setnx(key, hostname, ttl);
+        String key = entryKey();
+        String result = redis.setnx(entryKey(), hostname, ttl);
 
         log.info("[LEADER ELECTION] Trying to write value {} in key {} with ttl {}, result: {}", hostname, key, ttl, result);
 
@@ -60,7 +60,10 @@ public class LeaderElection {
     }
 
     public void unregisterLeadership() {
-        String key = keyPrefix + this.peerGroupId.toString();
-        redis.del(key);
+        redis.del(entryKey());
+    }
+
+    private String entryKey() {
+        return keyPrefix + "." + this.peerGroupId.toString();
     }
 }

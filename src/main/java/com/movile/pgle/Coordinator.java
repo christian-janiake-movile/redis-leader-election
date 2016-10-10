@@ -10,13 +10,15 @@ import org.springframework.context.annotation.*;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import java.util.UUID;
+
 @Configuration
 @ComponentScan("com.movile.pgle")
 @PropertySource({"application.properties", "auth.properties"})
 public class Coordinator {
 
     @Bean
-    public Logger logger(@Value("cmo.movile.pgle") String loggerName) {
+    public Logger log(@Value("cmo.movile.pgle") String loggerName) {
         return LoggerFactory.getLogger(loggerName);
     }
 
@@ -33,6 +35,17 @@ public class Coordinator {
         int port = Integer.parseInt(env.getProperty("redis.port"));
         return new RedisConnectionManager(new RedisConfig(host, port));
     };
+
+    @Bean(name="hostname")
+    public String hostname() {
+        if(env.containsProperty("HOSTNAME")) {
+            return env.getProperty("HOSTNAME");
+        } else {
+//            log.warn("Could not retrieve HOSTNAME environment variable, generate UUID as identifier");
+            return UUID.randomUUID().toString();
+        }
+
+    }
 
     public static void main(String[] args) {
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
