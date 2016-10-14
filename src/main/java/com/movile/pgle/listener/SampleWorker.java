@@ -19,11 +19,6 @@ public class SampleWorker implements Worker, Runnable {
     }
 
     @Override
-    public void stop() {
-        onDuty = false;
-    }
-
-    @Override
     public void run() {
         while(true) {
             if(onDuty) {

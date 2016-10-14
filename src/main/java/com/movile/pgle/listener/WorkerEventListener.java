@@ -46,8 +46,8 @@ public class WorkerEventListener extends EventListener {
 
     @Override
     public void isNotLeader(PeerGroup peerGroup) {
-        if(workers.containsKey(peerGroup.getId())) {
-            workers.get(peerGroup.getId()).stop();
-        }
+//        if(workers.containsKey(peerGroup.getId())) {
+//            workers.get(peerGroup.getId()).stop();
+//        }
     }
 }

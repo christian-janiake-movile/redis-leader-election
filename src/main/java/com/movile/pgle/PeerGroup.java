@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Properties;
 
@@ -25,8 +27,8 @@ public class PeerGroup {
     private Long leadershipInterval;
     private String workerClass;        // optional: Class implementing Worker interface
 
-    private Boolean isLeader = Boolean.FALSE;
-    private Date isLeaderUntil;
+    private Boolean electee = Boolean.FALSE;
+    private Instant isLeaderUntil;
 
     @Autowired
     private ApplicationContext ctx;
@@ -61,19 +63,20 @@ public class PeerGroup {
         scheduler.scheduleAtFixedRate(new Thread() {
             @Override
             public void run() {
-                if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
+                if (isLeader()) {
                     log.info("{} is leader", name);
                 } else {
+                    Instant beforeElection = Instant.now();
                     if (election.isLeader()) {
                         log.info("{} leadership acquired", name);
-                        isLeader = Boolean.TRUE;
-                        isLeaderUntil = new Date(System.currentTimeMillis() + leadershipInterval);
+                        electee = Boolean.TRUE;
+                        isLeaderUntil = beforeElection.plus(leadershipInterval, ChronoUnit.MILLIS);
                         peerGroupEventPublisher.publishEvent(new Event(Event.EventType.IS_LEADER, peerGroup));
                     } else {
                         log.info("{} not my turn", name);
-                        if(isLeader) {
+                        if(electee) {
                             peerGroupEventPublisher.publishEvent(new Event(Event.EventType.IS_NOT_LEADER, peerGroup));
-                            isLeader = false;
+                            electee = false;
                         }
                     }
                 }
@@ -83,7 +86,7 @@ public class PeerGroup {
 
     @PreDestroy
     public void unregister() {
-        if(isLeader && System.currentTimeMillis() < isLeaderUntil.getTime()) {
+        if (isLeader()){
             LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", this);
             election.unregisterLeadership();
         }
@@ -125,19 +128,19 @@ public class PeerGroup {
         this.leadershipInterval = leadershipInterval;
     }
 
-    public Boolean getIsLeader() {
-        return isLeader;
+    public Boolean getElectee() {
+        return electee;
     }
 
-    public void setIsLeader(Boolean isLeader) {
-        this.isLeader = isLeader;
+    public void setElectee(Boolean electee) {
+        this.electee = electee;
     }
 
-    public Date getIsLeaderUntil() {
+    public Instant getIsLeaderUntil() {
         return isLeaderUntil;
     }
 
-    public void setIsLeaderUntil(Date isLeaderUntil) {
+    public void setIsLeaderUntil(Instant isLeaderUntil) {
         this.isLeaderUntil = isLeaderUntil;
     }
 
@@ -153,6 +156,9 @@ public class PeerGroup {
         return StringUtils.isNotEmpty(workerClass);
     }
 
+    public boolean isLeader() {
+        return electee && isLeaderUntil.isAfter(Instant.now());
+    }
     @Override
     public String toString() {
         return "PeerGroup{" +
