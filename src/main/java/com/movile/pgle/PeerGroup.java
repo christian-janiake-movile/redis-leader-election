@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Properties;
+import java.util.concurrent.ScheduledFuture;
 
 @Component("peerGroup")
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -45,6 +46,9 @@ public class PeerGroup {
     @Autowired
     PeerGroupEventPublisher peerGroupEventPublisher;
 
+    ScheduledFuture scheduledFuture = null;
+
+
     public PeerGroup(Integer id, Properties groupProperties) {
         this.id = id;
         this.name = groupProperties.getProperty("group.name");
@@ -60,7 +64,7 @@ public class PeerGroup {
         final LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", peerGroup);
         peerGroupEventPublisher.publishEvent(new Event(Event.EventType.PEER_GROUP_REGISTER, peerGroup));
         long nextElection = electionInterval - (System.currentTimeMillis() % electionInterval);
-        scheduler.scheduleAtFixedRate(new Thread() {
+        scheduledFuture = scheduler.scheduleAtFixedRate(new Thread() {
             @Override
             public void run() {
                 if (isLeader()) {
@@ -86,6 +90,7 @@ public class PeerGroup {
 
     @PreDestroy
     public void unregister() {
+        scheduledFuture.cancel(false);
         if (isLeader()){
             LeaderElection election = (LeaderElection) ctx.getBean("leaderElection", this);
             election.unregisterLeadership();
